@@ -72,12 +72,7 @@ class PostCreateFormTests(TestCase):
             response, reverse('posts:profile', args=[self.user.username])
         )
         self.assertEqual(Post.objects.count(), posts_count + 1)
-        created_post = Post.objects.get(
-            author=self.user,
-            text=form_data['text'],
-            group=form_data['group'],
-            image='posts/small_gif_for_create.gif'
-        )
+        created_post = Post.objects.first()
         context = {
             self.user.username: created_post.author.username,
             form_data['text']: created_post.text,
@@ -112,7 +107,6 @@ class PostCreateFormTests(TestCase):
         post_id = post_for_edit.pk
         form_edit_data = {
             'text': 'Тестовый текст поста для редактирования изменён',
-            'group': post_for_edit.group.pk
         }
         response = self.authorized_client.post(
             reverse('posts:post_edit', args=[post_id]),
@@ -124,11 +118,7 @@ class PostCreateFormTests(TestCase):
         self.assertEqual(Post.objects.count(), posts_count)
         edited_post = Post.objects.get(pk=post_id)
         context = {
-            self.user.username: edited_post.author.username,
             form_edit_data['text']: edited_post.text,
-            form_edit_data['group']: edited_post.group.pk,
-            post_for_edit.image.name: edited_post.image.name,
-            post_for_edit.image.size: edited_post.image.size,
         }
         self.post_form_check(context)
 

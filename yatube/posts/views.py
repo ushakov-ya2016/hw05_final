@@ -120,36 +120,23 @@ def follow_index(request):
 @login_required
 def profile_follow(request, username):
     author_following = get_object_or_404(User, username=username)
-    if (
-        Follow.objects.filter(
-            author=author_following,
-            user=request.user
-        ).exists()
-        or request.user == author_following
-    ):
+    if Follow.objects.filter(
+        author=author_following, user=request.user
+    ).exists() or request.user == author_following:
         return redirect('posts:profile', username=username)
-    else:
-        Follow.objects.create(
-            user=request.user,
-            author=author_following,
-        )
-        return redirect('posts:profile', username=username)
+    Follow.objects.create(user=request.user, author=author_following)
+    return redirect('posts:profile', username=username)
 
 
 @login_required
 def profile_unfollow(request, username):
     author_following = get_object_or_404(User, username=username)
-    if (
-        not Follow.objects.filter(
-            author=author_following,
-            user=request.user
-        ).exists()
-        or request.user == author_following
-    ):
+    if not Follow.objects.filter(
+        author=author_following, user=request.user
+    ).exists() or request.user == author_following:
         return redirect('posts:profile', username=username)
-    else:
-        Follow.objects.filter(
-            author=author_following,
-            user=request.user
-        ).delete()
-        return redirect('posts:profile', username=username)
+    Follow.objects.filter(
+        author=author_following,
+        user=request.user
+    ).delete()
+    return redirect('posts:profile', username=username)

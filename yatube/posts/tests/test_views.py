@@ -57,43 +57,30 @@ class PostsViewsAndPagesTests(TestCase):
                 image=cls.uploaded,
             )
         cls.guest_client = Client()
-        cls.index = (
-            'posts:index',
-            None,
-            'posts/index.html'
-        )
+        cls.index = ('posts:index', None, 'posts/index.html')
         cls.group_list = (
-            'posts:group_list',
-            [cls.group.slug],
+            'posts:group_list', [cls.group.slug],
             'posts/group_list.html'
         )
         cls.profile = (
-            'posts:profile',
-            [cls.user.username],
+            'posts:profile', [cls.user.username],
             'posts/profile.html'
         )
         cls.post_detail = (
-            'posts:post_detail',
-            [cls.post.pk],
+            'posts:post_detail', [cls.post.pk],
             'posts/post_detail.html'
         )
         cls.post_edit = (
-            'posts:post_edit',
-            [cls.post.pk],
+            'posts:post_edit', [cls.post.pk],
             'posts/create_post.html'
         )
         cls.post_create = (
-            'posts:post_create',
-            None,
+            'posts:post_create', None,
             'posts/create_post.html'
         )
         cls.namespace_names = (
-            cls.index,
-            cls.group_list,
-            cls.profile,
-            cls.post_detail,
-            cls.post_edit,
-            cls.post_create,
+            cls.index, cls.group_list, cls.profile,
+            cls.post_detail, cls.post_edit, cls.post_create,
         )
 
     @classmethod
@@ -316,20 +303,27 @@ class FollowTests(TestCase):
     def setUp(self):
         self.authorized_client = Client()
         self.authorized_client.force_login(self.reader)
+
+    def test_follow_check(self):
+        """Проверка возможности оформить подписку на автора"""
         self.authorized_client.get(
             reverse(
                 'posts:profile_follow',
                 args=[self.popular_author.username]
             )
         )
-
-    def test_follow_and_unfollow_check(self):
-        """Проверка возможности оформить подписку и отписаться"""
         self.assertTrue(
             Follow.objects.filter(
                 user=self.reader,
                 author=self.popular_author,
             ).exists()
+        )
+
+    def test_unfollow_check(self):
+        """Проверка возможности отписаться от автора"""
+        Follow.objects.create(
+            user=self.reader,
+            author=self.popular_author,
         )
         self.authorized_client.get(
             reverse(
@@ -346,6 +340,10 @@ class FollowTests(TestCase):
 
     def test_followers_post_check(self):
         """Проверка размещения поста в ленте подписчика"""
+        Follow.objects.create(
+            user=self.reader,
+            author=self.popular_author,
+        )
         Post.objects.create(
             author=self.popular_author,
             text='Тестовый текст поста для проверки подписок'
