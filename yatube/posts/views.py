@@ -9,6 +9,7 @@ from .utils import paginator
 
 @cache_page(20, key_prefix='index_page')
 def index(request):
+    """Главная страница."""
     post_list = Post.objects.select_related(
         'author', 'group'
     )
@@ -17,6 +18,7 @@ def index(request):
 
 
 def group_posts(request, slug):
+    """Страница группы."""
     group = get_object_or_404(Group, slug=slug)
     post_list = group.groups.select_related(
         'author', 'group'
@@ -29,6 +31,7 @@ def group_posts(request, slug):
 
 
 def profile(request, username):
+    """Страница автора."""
     author = get_object_or_404(User, username=username)
     total_posts = author.posts.count()
     post_list = author.posts.all()
@@ -49,6 +52,7 @@ def profile(request, username):
 
 
 def post_detail(request, post_id):
+    """Страница поста."""
     post = get_object_or_404(Post, pk=post_id)
     form = CommentForm(request.POST or None)
     total_posts = post.author.posts.count()
@@ -66,6 +70,7 @@ def post_detail(request, post_id):
 
 @login_required()
 def post_create(request):
+    """Страница создания поста."""
     form = PostForm(
         request.POST or None,
         files=request.FILES or None)
@@ -79,6 +84,7 @@ def post_create(request):
 
 @login_required()
 def post_edit(request, post_id):
+    """Страница редактирования поста."""
     post_for_edit = get_object_or_404(Post, pk=post_id)
     if post_for_edit.author != request.user:
         return redirect('posts:post_detail', post_id=post_id)
@@ -100,6 +106,7 @@ def post_edit(request, post_id):
 
 @login_required
 def add_comment(request, post_id):
+    """Функция добавления комментария к посту."""
     post = get_object_or_404(Post, pk=post_id)
     form = CommentForm(request.POST or None)
     if form.is_valid():
@@ -112,6 +119,7 @@ def add_comment(request, post_id):
 
 @login_required
 def follow_index(request):
+    """Функция вывода постов избранных авторов."""
     post_list = Post.objects.filter(author__following__user=request.user)
     context = paginator(request, post_list)
     return render(request, 'posts/follow.html', context)
@@ -119,21 +127,20 @@ def follow_index(request):
 
 @login_required
 def profile_follow(request, username):
+    """Функция подписки на автора."""
     author_following = get_object_or_404(User, username=username)
-    if Follow.objects.filter(
-        author=author_following, user=request.user
-    ).exists() or request.user == author_following:
+    if request.user == author_following:
         return redirect('posts:profile', username=username)
-    Follow.objects.create(user=request.user, author=author_following)
+    Follow.objects.get_or_create(
+        author=author_following, user=request.user)
     return redirect('posts:profile', username=username)
 
 
 @login_required
 def profile_unfollow(request, username):
+    """Функция отписки от автора."""
     author_following = get_object_or_404(User, username=username)
-    if not Follow.objects.filter(
-        author=author_following, user=request.user
-    ).exists() or request.user == author_following:
+    if request.user == author_following:
         return redirect('posts:profile', username=username)
     Follow.objects.filter(
         author=author_following,
